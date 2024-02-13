@@ -8,7 +8,7 @@ import logging
 # initialize
 app = Flask(__name__)
 # save log to file
-logging.basicConfig(filename='dist/log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # open .env file if exists
 try:
