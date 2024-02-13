@@ -30,15 +30,10 @@ testnet = True if os.environ.get('TESTNET') == 'y' else False
 session1 = HTTP(testnet=testnet, api_key=api_key1, api_secret=api_secret1)
 session2 = HTTP(testnet=testnet, api_key=api_key2, api_secret=api_secret2)
 
-'''
 balance1_init = float(session1.get_wallet_balance(accountType="UNIFIED", coin="USDT")['result']['list']['coin'][0]
                       ['walletBalance'])
 balance2_init = float(session2.get_wallet_balance(accountType="UNIFIED", coin="USDT")['result']['list']['coin'][0]
                       ['walletBalance'])
-'''
-
-balance1_init = 1000
-balance2_init = 1000
 
 loss_balance1 = balance1_init * 0.8
 loss_balance2 = balance2_init * 0.8
@@ -65,7 +60,7 @@ def webhook():
         coin1_index = pickle.load(f)
         coin2_index = pickle.load(f)
     try:
-        if data['symbol'] == coin1[coin1_index] or data['symbol'][:-2] == coin1[coin1_index]:
+        if coin1[coin1_index] in data['symbol']:
             if data['action'] == 'buy':
                 session1.place_order(catagory="linear", symbol=coin1[coin1_index], side="Buy", orderType="MARKET", qty=0, reduceOnly='true')
 
@@ -97,7 +92,7 @@ def webhook():
         logging.error("交易失败。")
 
     try:
-        if data['symbol'] == coin2[coin2_index] or data['symbol'][:-2] == coin2[coin2_index]:
+        if coin2[coin2_index] in data['symbol']:
             if data['action'] == 'buy':
                 session2.place_order(catagory="linear", symbol=coin2[coin2_index], side="Buy", orderType="MARKET", qty=0, reduceOnly='true')
 
