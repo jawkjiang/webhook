@@ -6,9 +6,22 @@ import logging
 
 
 # initialize
-app = Flask(__name__)
 # save log to file
-logging.basicConfig(filename='log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+
+filehandler = logging.FileHandler('log.log', encoding='utf-8')
+filehandler.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+filehandler.setFormatter(formatter)
+
+logger.addHandler(console_handler)
+logger.addHandler(filehandler)
 
 # open .env file if exists
 try:
@@ -30,10 +43,15 @@ testnet = True if os.environ.get('TESTNET') == 'y' else False
 session1 = HTTP(testnet=testnet, api_key=api_key1, api_secret=api_secret1)
 session2 = HTTP(testnet=testnet, api_key=api_key2, api_secret=api_secret2)
 
+'''
 balance1_init = float(session1.get_wallet_balance(accountType="UNIFIED", coin="USDT")['result']['list']['coin'][0]
                       ['walletBalance'])
 balance2_init = float(session2.get_wallet_balance(accountType="UNIFIED", coin="USDT")['result']['list']['coin'][0]
                       ['walletBalance'])
+'''
+
+balance1_init = 1000
+balance2_init = 1000
 
 loss_balance1 = balance1_init * 0.8
 loss_balance2 = balance2_init * 0.8
@@ -48,6 +66,9 @@ with open('temp.pkl', 'wb') as f:
     pickle.dump(loss_balance2, f)
     pickle.dump(coin1_index, f)
     pickle.dump(coin2_index, f)
+logging.info("初始化完成。")
+
+app = Flask(__name__)
 
 
 @app.route('/webhook', methods=['POST'])
@@ -60,7 +81,7 @@ def webhook():
         coin1_index = pickle.load(f)
         coin2_index = pickle.load(f)
     try:
-        if coin1[coin1_index] in data['symbol']:
+        if data['symbol'] == coin1[coin1_index] or data['symbol'][:-2] == coin1[coin1_index]:
             if data['action'] == 'buy':
                 session1.place_order(catagory="linear", symbol=coin1[coin1_index], side="Buy", orderType="MARKET", qty=0, reduceOnly='true')
 
@@ -92,7 +113,7 @@ def webhook():
         logging.error("交易失败。")
 
     try:
-        if coin2[coin2_index] in data['symbol']:
+        if data['symbol'] == coin2[coin2_index] or data['symbol'][:-2] == coin2[coin2_index]:
             if data['action'] == 'buy':
                 session2.place_order(catagory="linear", symbol=coin2[coin2_index], side="Buy", orderType="MARKET", qty=0, reduceOnly='true')
 
@@ -130,6 +151,11 @@ def webhook():
         pickle.dump(coin1_index, f)
         pickle.dump(coin2_index, f)
 
+    return 'success'
+
+
+@app.route('/test', methods=['POST'])
+def test_link():
     return 'success'
 
 
